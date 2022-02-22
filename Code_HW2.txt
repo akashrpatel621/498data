@@ -1,0 +1,78 @@
+// Greeeting  endingpoint to return hello world
+app.get('/greeting', (reg, res) => {
+        res.send("Hello World!");
+});
+
+const express = require('express');
+const bodyParser = require('body-parser');
+var connection = mysql.createConnection({
+        host : 'localhost',
+        user : 'master',
+        password : 'masterpassword',
+        database: 'mydb'
+});
+var connection2 = mysql.createConnection({
+        host : '34.121.192.242', # change ip for other vm instance
+        user : 'master',
+        password : 'masterpassword',
+        database : 'mydb',
+});
+connection.connect();
+connection2.connect();
+const app = express();
+app.use(bodyParser.json());
+// Handle requests to the base IP/URL
+app.get('/', (reg,res) => {
+        res.json({'Hello':'world'});
+});
+// Handle insert operation to out database
+app.get('/addName', (reg, res) => {
+        let n = reg.body.name;
+        n = n.replace(/^[0-9\s]*|[+*\r\n]/g,'');
+        query = `INSERT INTO nametable (name) VALUES ('`+n +`';)`;
+        connection.query(query, (e,r,f) => {
+                console.log(r);
+                res.json({'message':'Add successful.', 'users':r});
+        });
+});
+
+// Greeeting  endingpoint to return hello world
+app.get('/greeting', (reg, res) => {
+        res.send("Hello World!");
+});
+
+// list
+app.get('/list', (reg,res) => {
+        query = `SELECT username FROM Users;`
+        connection.query(query, (e,r,f) => {
+                var array = [];
+                for (var i = 0; i < r.length; i++) {
+                        array.push(r[i]['username']);
+                }
+                console.log(array);
+                res.json({'users': array});
+        });
+
+});
+// register
+app.post('/register', (reg, res) => {
+        let n = reg.body.username;
+        query = `INSERT INTO Users (username) VALUES ('`+n+`');`
+        connection.query(query);
+        connection2.query(query);
+        res.send("added");
+});
+
+//clear 
+app.post('/clear', (reg, res) => {
+        query = `DELETE  FROM Users;`
+        connection.query(query);
+        connection2.query(query);
+        res.send("added");
+});
+
+var http = require('http').Server(app);
+const PORT = 80
+http.listen(PORT, function() {
+        console.log('Listening');
+});
