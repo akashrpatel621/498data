@@ -1,1 +1,132 @@
+const {spawn} = require('child_process');
+const express = require('express');
+const bodyParser = require('body-parser');
+const app = express();
+const { exec } = require('child_process');
+const fs = require('fs');
+app.use(bodyParser.json());
+
+app.get('/lengthCounts', (reg,res) => {
+        let rawdata = fs.readFileSync('output.json');
+        let student = JSON.parse(rawdata);
+        res.send(student)
+});
+app.get('/result', (req, res) => {
+        const path = "output2.json";
+        console.log("result");
+        if (fs.existsSync(path)) {
+                fs.readFile(path,(err, data) => {
+                        res.send(data)
+                })
+        } else {
+                res.send("Not done yet")
+        }
+});
+
+
+
+app.post('/analyze', (req, res) => {
+        res.send('computed');
+        console.log("analyze");
+        wordlist = req.body.wordlist;
+        weights = req.body.weights;
+
+        wordlist = JSON.stringify(wordlist);
+        weights = JSON.stringify(weights);
+        fs.writeFile('wordlist.txt', wordlist, err => {});
+        fs.writeFile('weights.json', weights, err => {});
+
+        var cmd = "python3 script.py War_and_Peace.txt output2.json wordlist.txt weights.json";
+        exec(cmd, err => {});
+});
+
+
+var http = require('http').Server(app);
+const PORT = 80
+
+# next file
+import findspark
+findspark.init()
+
+import ast
+import pyspark
+import sys
+from json import JSONEncoder
+
+# created dictionary for weights
+weights = ""
+with open("weights.txt", 'r') as f:
+        weights = f.read()
+weights = weights.replace('[', '{')
+weights = weights.replace(']', '}')
+weights = weights.replace("'", '"')
+print(weights)
+dict_of_weights = json.loads(weights)
+
+print(dict_of_weights, "sadfsadfasdfasf")
+
+# create list for weightList
+wordList = ""
+with open("wordList.txt", 'r') as f:
+        wordList = ast.literal_eval(f.read())
+#weightList = weightList.replace('[','')
+#weightList = weightList.replace(']', '')
+#weightList = weightList.replace("'", '')
+#print(weightList)
+#wordList = weightList.split(',')
+for i in range(len(wordList)):
+        wordList[i] = wordList[i].strip()
+
+print(type(wordList), wordList)
+def func(x):
+        return (x[0], x[1][0])
+def myMapFuncWeights(x): # takes sentances and computes weights
+        weight = 0
+        for i in range(len(x)):
+                if x[i] in dict_of_weights:
+                        weight += dict_of_weights[x[i]]
+        return (x, weight)
+
+def myMapFindSentWord(w,x): # returns (w,x) if word is in the sentence
+        print(type(w),type(x[0]))
+ def word_sent(w, x):
+        if w in x[0]:
+                return (w, x)
+
+
+def reduce(v1, v2):
+        if v1[1] > v2[1]:
+                return v1
+        else:
+                return v2
+
+def reduce2(v):
+        return (v[0], v[1][0])
+
+
+sc = pyspark.SparkContext()
+print("Spark Context initialized.")
+lines = sc.textFile(inputUri)
+ret = map(lambda x: map(lambda w: word_sent(w, x), wordlist), lines.map(myMapper).colle$
+t = list(ret)
+for i in range(len(t)):
+        t[i] = list(t[i])
+temp = []
+for i in range(len(t)):
+        for j in range(len(t[i])):
+                if t[i][j] is not None:
+                        temp.append(t[i][j])
+
+rdd = sc.parallelize(t)
+rdd2 = rdd.reduceByKey(reduce).map(reduce2)
+out = rdd2.collectAsMap()
+output = open(outputfile, "w")
+json.dump(out, output)
+output.close()
+print("Operations complete.")
+print("Output saved as text file.")
+
+
+
+
 
